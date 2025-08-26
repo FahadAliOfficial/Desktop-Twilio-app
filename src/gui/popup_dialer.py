@@ -210,7 +210,7 @@ class PopupDialer(QWidget):
                 border: 2px solid #4a90e2;
                 border-radius: 10px;
                 color: #ffffff;
-                font-size: 14px;
+                font-size: 16px;
                 padding: 10px;
             }
             QListWidget::item {
@@ -330,7 +330,7 @@ class PopupDialer(QWidget):
         self.nav_buttons = {}
         
         # Recent button
-        recent_btn = QPushButton("📞\nRecent")
+        recent_btn = QPushButton("📞 Recent")
         recent_btn.setMinimumHeight(65)
         recent_btn.setFont(QFont("Segoe UI", 11, QFont.Bold))
         recent_btn.clicked.connect(lambda: self.switch_view("recent"))
@@ -338,7 +338,7 @@ class PopupDialer(QWidget):
         nav_layout.addWidget(recent_btn)
         
         # Dialer button (default active)
-        dialer_btn = QPushButton("⌨\nDialer")
+        dialer_btn = QPushButton("⌨ Dialer")
         dialer_btn.setMinimumHeight(65)
         dialer_btn.setFont(QFont("Segoe UI", 11, QFont.Bold))
         dialer_btn.clicked.connect(lambda: self.switch_view("dialer"))
@@ -346,7 +346,7 @@ class PopupDialer(QWidget):
         nav_layout.addWidget(dialer_btn)
         
         # Voicemail button
-        voicemail_btn = QPushButton("🔊\nVoicemail")
+        voicemail_btn = QPushButton("🔊 Voicemail")
         voicemail_btn.setMinimumHeight(65)
         voicemail_btn.setFont(QFont("Segoe UI", 11, QFont.Bold))
         voicemail_btn.clicked.connect(lambda: self.switch_view("voicemail"))
@@ -360,7 +360,7 @@ class PopupDialer(QWidget):
                 color: #ffffff;
                 border: 2px solid #555555;
                 border-radius: 15px;
-                font-size: 14px;
+                font-size: 16px;
                 font-weight: bold;
                 font-family: 'Segoe UI';
                 padding: 12px 8px;
@@ -377,7 +377,7 @@ class PopupDialer(QWidget):
                 color: #ffffff;
                 border: 2px solid #357abd;
                 border-radius: 15px;
-                font-size: 14px;
+                font-size: 16px;
                 font-weight: bold;
                 font-family: 'Segoe UI';
                 padding: 12px 8px;
@@ -408,7 +408,7 @@ class PopupDialer(QWidget):
                 color: #ffffff;
                 border: 2px solid #555555;
                 border-radius: 15px;
-                font-size: 14px;
+                font-size: 16px;
                 font-weight: bold;
                 font-family: 'Segoe UI';
                 padding: 12px 8px;
@@ -425,7 +425,7 @@ class PopupDialer(QWidget):
                 color: #ffffff;
                 border: 2px solid #357abd;
                 border-radius: 15px;
-                font-size: 14px;
+                font-size: 16px;
                 font-weight: bold;
                 font-family: 'Segoe UI';
                 padding: 12px 8px;

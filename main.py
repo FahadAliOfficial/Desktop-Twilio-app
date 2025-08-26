@@ -154,7 +154,16 @@ def main():
     
     # Create and show the main window
     main_window = TwilioMainWindow()
-    main_window.show()
+    
+    # Show size constraints information in status bar
+    min_size = main_window.minimumSize()
+    max_size = main_window.maximumSize()
+    main_window.statusBar().showMessage(
+        f"Window size constraints: Min {min_size.width()}x{min_size.height()} - Max {max_size.width()}x{max_size.height()}", 
+        5000
+    )
+    
+    main_window.showMaximized()  # Always start maximized
     
     # Start the application event loop
     sys.exit(app.exec_())

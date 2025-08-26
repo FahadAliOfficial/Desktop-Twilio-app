@@ -29,6 +29,11 @@ class TwilioMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         
+        # Set window flags early to ensure all controls are available
+        self.setWindowFlags(Qt.Window | Qt.WindowSystemMenuHint | 
+                           Qt.WindowMinimizeButtonHint | Qt.WindowMaximizeButtonHint | 
+                           Qt.WindowCloseButtonHint)
+        
         # Initialize configuration
         self.config = AppConfig()
         
@@ -52,55 +57,246 @@ class TwilioMainWindow(QMainWindow):
     
     def setup_ui(self):
         """
-        Set up the main user interface
+        Set up the main user interface with responsive design
         """
-        # Set window properties
+        # Set window properties with size constraints
         self.setWindowTitle(f"{self.config.APP_NAME} v{self.config.APP_VERSION}")
         self.setGeometry(100, 100, self.config.WINDOW_WIDTH, self.config.WINDOW_HEIGHT)
-        self.setMinimumSize(800, 600)
+        
+        # Set minimum and maximum size constraints
+        self.setMinimumSize(1300, 650)   # Minimum size for usability
+        # Remove maximum size constraint temporarily to test maximize button
+        # self.setMaximumSize(2560, 1440) # Maximum size for ultra-wide monitors
+        
+        # Initialize responsive state
+        self.sidebar_collapsed = False
+        self.current_width_category = "large"
         
         # Create central widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         
         # Create main layout
-        main_layout = QHBoxLayout(central_widget)
-        main_layout.setContentsMargins(10, 10, 10, 10)
-        main_layout.setSpacing(10)
+        self.main_layout = QHBoxLayout(central_widget)
+        self.main_layout.setContentsMargins(8, 8, 8, 8)
+        self.main_layout.setSpacing(8)
         
-        # Create splitter for resizable layout
-        splitter = QSplitter(Qt.Horizontal)
-        main_layout.addWidget(splitter)
+        # Create sidebar with toggle functionality
+        self.setup_responsive_sidebar()
         
-        # Create sidebar navigation
+        # Create main content area with adaptive layout
+        self.setup_main_content_area()
+        
+        # Apply initial responsive layout
+        self.apply_responsive_layout()
+    
+    def setup_responsive_sidebar(self):
+        """
+        Setup sidebar with collapse/expand functionality
+        """
+        # Create sidebar container
+        self.sidebar_container = QWidget()
+        self.sidebar_layout = QVBoxLayout(self.sidebar_container)
+        self.sidebar_layout.setContentsMargins(0, 0, 0, 0)
+        self.sidebar_layout.setSpacing(0)
+        
+        # Create toggle button for sidebar
+        self.sidebar_toggle_btn = QPushButton("☰")
+        self.sidebar_toggle_btn.setMaximumSize(40, 40)
+        self.sidebar_toggle_btn.setMinimumSize(40, 40)
+        self.sidebar_toggle_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #4a90e2;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #357abd;
+            }
+            QPushButton:pressed {
+                background-color: #2e5f99;
+            }
+        """)
+        self.sidebar_toggle_btn.clicked.connect(self.toggle_sidebar)
+        self.sidebar_layout.addWidget(self.sidebar_toggle_btn)
+        
+        # Create actual sidebar
         self.sidebar = SidebarNavigation()
         self.sidebar.setMinimumWidth(250)
         self.sidebar.setMaximumWidth(350)
-        splitter.addWidget(self.sidebar)
+        self.sidebar_layout.addWidget(self.sidebar)
         
-        # Create content area container
-        content_container = QWidget()
-        content_layout = QHBoxLayout(content_container)
-        content_layout.setContentsMargins(0, 0, 0, 0)
-        content_layout.setSpacing(10)
+        # Add sidebar container to main layout
+        self.main_layout.addWidget(self.sidebar_container)
+    
+    def setup_main_content_area(self):
+        """
+        Setup main content area with adaptive layout
+        """
+        # Create content splitter for content area and dialer
+        self.content_splitter = QSplitter(Qt.Horizontal)
+        self.content_splitter.setChildrenCollapsible(True)
         
-        # Create content area for main content
+        # Create content area
         self.content_area = ContentArea()
-        content_layout.addWidget(self.content_area, stretch=2)
+        self.content_area.setMinimumWidth(400)
+        self.content_splitter.addWidget(self.content_area)
         
         # Create dialer widget
         self.dialer = DialerWidget()
-        self.dialer.setMinimumWidth(300)
+        self.dialer.setMinimumWidth(280)
         self.dialer.setMaximumWidth(400)
-        content_layout.addWidget(self.dialer, stretch=1)
+        self.content_splitter.addWidget(self.dialer)
         
-        splitter.addWidget(content_container)
+        # Set initial proportions
+        self.content_splitter.setSizes([700, 300])
         
-        # Set splitter proportions
-        splitter.setSizes([300, 900])
-        splitter.setCollapsible(0, False)
-        splitter.setCollapsible(1, False)
+        # Add content splitter to main layout
+        self.main_layout.addWidget(self.content_splitter, stretch=1)
     
+    def toggle_sidebar(self):
+        """
+        Toggle sidebar visibility
+        """
+        if self.sidebar_collapsed:
+            # Expand sidebar
+            self.sidebar.show()
+            self.sidebar_toggle_btn.setText("☰")
+            self.sidebar_collapsed = False
+        else:
+            # Collapse sidebar
+            self.sidebar.hide()
+            self.sidebar_toggle_btn.setText("→")
+            self.sidebar_collapsed = True
+    
+    def apply_responsive_layout(self):
+        """
+        Apply responsive layout based on current window size
+        """
+        width = self.width()
+        
+        # Determine width category based on size constraints
+        if width < 1100:
+            new_category = "small"
+        elif width < 1500:
+            new_category = "medium"
+        else:
+            new_category = "large"
+        
+        # Only update if category changed
+        if new_category != self.current_width_category:
+            self.current_width_category = new_category
+            
+            if new_category == "small":
+                # Auto-collapse sidebar on small screens
+                if not self.sidebar_collapsed:
+                    self.toggle_sidebar()
+                
+                # Adjust component sizes for small screens
+                self.dialer.setMaximumWidth(280)
+                self.dialer.setMinimumWidth(250)
+                self.content_area.setMinimumWidth(350)
+                
+                # Tighter margins for small screens
+                self.main_layout.setContentsMargins(4, 4, 4, 4)
+                self.main_layout.setSpacing(4)
+                
+            elif new_category == "medium":
+                # Show sidebar but keep it compact
+                if self.sidebar_collapsed:
+                    self.toggle_sidebar()
+                
+                self.sidebar.setMaximumWidth(300)
+                self.dialer.setMaximumWidth(330)
+                self.dialer.setMinimumWidth(280)
+                self.content_area.setMinimumWidth(400)
+                
+                # Standard margins
+                self.main_layout.setContentsMargins(6, 6, 6, 6)
+                self.main_layout.setSpacing(6)
+                
+            else:  # large
+                # Full layout with comfortable spacing
+                if self.sidebar_collapsed:
+                    self.toggle_sidebar()
+                
+                self.sidebar.setMaximumWidth(380)
+                self.dialer.setMaximumWidth(420)
+                self.dialer.setMinimumWidth(320)
+                self.content_area.setMinimumWidth(500)
+                
+                # Comfortable margins for large screens
+                self.main_layout.setContentsMargins(8, 8, 8, 8)
+                self.main_layout.setSpacing(8)
+    
+    def resizeEvent(self, event):
+        """
+        Handle window resize events for responsive behavior
+        """
+        super().resizeEvent(event)
+        
+        # Apply responsive layout based on new size
+        self.apply_responsive_layout()
+        
+        # Update content splitter proportions based on available space
+        width = self.width()
+        sidebar_width = 0 if self.sidebar_collapsed else self.sidebar.width()
+        available_width = width - sidebar_width - 30  # Account for margins and spacing
+        
+        if available_width > 0:
+            if self.current_width_category == "small":
+                # On small screens, prioritize content area
+                content_ratio = 0.75
+                dialer_ratio = 0.25
+            elif self.current_width_category == "medium":
+                # Balanced layout for medium screens
+                content_ratio = 0.68
+                dialer_ratio = 0.32
+            else:
+                # Large screens can have more balanced layout
+                content_ratio = 0.65
+                dialer_ratio = 0.35
+            
+            # Apply the proportions
+            content_width = int(available_width * content_ratio)
+            dialer_width = int(available_width * dialer_ratio)
+            
+            # Ensure minimum widths are respected
+            if content_width < self.content_area.minimumWidth():
+                content_width = self.content_area.minimumWidth()
+                dialer_width = available_width - content_width
+            
+            if dialer_width < self.dialer.minimumWidth():
+                dialer_width = self.dialer.minimumWidth()
+                content_width = available_width - dialer_width
+            
+            self.content_splitter.setSizes([content_width, dialer_width])
+    
+    def constrainSize(self, size):
+        """
+        Constrain the window size to reasonable limits
+        """
+        # Get screen geometry for context
+        from PyQt5.QtWidgets import QApplication
+        screen = QApplication.primaryScreen()
+        screen_rect = screen.geometry()
+        
+        # Constrain width
+        min_width = self.minimumSize().width()
+        max_width = min(self.maximumSize().width(), screen_rect.width() - 100)
+        width = max(min_width, min(size.width(), max_width))
+        
+        # Constrain height
+        min_height = self.minimumSize().height()
+        max_height = min(self.maximumSize().height(), screen_rect.height() - 100)
+        height = max(min_height, min(size.height(), max_height))
+        
+        from PyQt5.QtCore import QSize
+        return QSize(width, height)
+
     def setup_connections(self):
         """
         Set up signal-slot connections
@@ -120,7 +316,119 @@ class TwilioMainWindow(QMainWindow):
         # if self.call_service:
         #     self.call_service.call_status_changed.connect(self.update_call_status)
         #     self.call_service.call_completed.connect(self.on_call_completed)
+        
+        # Apply responsive styles
+        self.apply_responsive_styles()
     
+    def apply_responsive_styles(self):
+        """
+        Apply responsive styles to the main window
+        """
+        responsive_stylesheet = """
+        QMainWindow {
+            background-color: #2b2b2b;
+            color: #ffffff;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        
+        QSplitter::handle {
+            background-color: #555555;
+            width: 2px;
+            margin: 1px;
+            border-radius: 1px;
+        }
+        
+        QSplitter::handle:hover {
+            background-color: #4a90e2;
+            width: 3px;
+        }
+        
+        QSplitter::handle:pressed {
+            background-color: #357abd;
+        }
+        
+        QSplitter {
+            border: none;
+        }
+        
+        /* Responsive components */
+        QWidget {
+            font-size: 10pt;
+        }
+        
+        QPushButton {
+            font-size: 9pt;
+            min-height: 28px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #555555;
+            background-color: #404040;
+            color: #ffffff;
+        }
+        
+        QPushButton:hover {
+            background-color: #4a90e2;
+            border-color: #357abd;
+        }
+        
+        QPushButton:pressed {
+            background-color: #357abd;
+        }
+        
+        QLineEdit, QComboBox {
+            font-size: 10pt;
+            min-height: 28px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #555555;
+            background-color: #353535;
+            color: #ffffff;
+        }
+        
+        QLineEdit:focus, QComboBox:focus {
+            border-color: #4a90e2;
+            background-color: #404040;
+        }
+        """
+        
+        self.setStyleSheet(responsive_stylesheet)
+    
+    def showEvent(self, event):
+        """
+        Handle show event to ensure proper responsive layout on startup
+        """
+        super().showEvent(event)
+        
+        # # Ensure window flags are properly set when showing
+        # self.setWindowFlags(Qt.Window | Qt.WindowSystemMenuHint | 
+        #                    Qt.WindowMinimizeButtonHint | Qt.WindowMaximizeButtonHint | 
+        #                    Qt.WindowCloseButtonHint)
+        # self.show()  # Re-show after setting flags
+        
+        # Apply responsive layout when window is first shown
+        QTimer.singleShot(100, self.apply_responsive_layout)  # Delay to ensure proper sizing
+    
+    def changeEvent(self, event):
+        """
+        Handle window state changes (minimize, maximize, restore)
+        """
+        super().changeEvent(event)
+        
+        # Handle window state changes
+        if event.type() == event.WindowStateChange:
+            # Apply responsive layout when window state changes
+            QTimer.singleShot(50, self.apply_responsive_layout)
+            
+            # Update menu action text and status bar based on window state
+            if self.isMaximized():
+                self.maximize_action.setText('&Restore Window')
+                self.statusBar().showMessage("Window maximized", 2000)
+            elif self.isMinimized():
+                self.statusBar().showMessage("Window minimized", 2000)
+            else:
+                self.maximize_action.setText('&Maximize Window')
+                self.statusBar().showMessage("Window restored", 2000)
+
     def setup_menu_bar(self):
         """
         Set up the application menu bar
@@ -146,6 +454,14 @@ class TwilioMainWindow(QMainWindow):
         
         # View menu
         view_menu = menubar.addMenu('&View')
+        
+        # Maximize/Restore action
+        self.maximize_action = QAction('&Maximize Window', self)
+        self.maximize_action.setShortcut('F11')
+        self.maximize_action.triggered.connect(self.toggle_maximize)
+        view_menu.addAction(self.maximize_action)
+        
+        view_menu.addSeparator()
         
         # Popup mode action
         popup_action = QAction('&Popup Mode', self)
@@ -267,6 +583,19 @@ class TwilioMainWindow(QMainWindow):
         
         self.show()
         self.is_popup_mode = False
+    
+    def toggle_maximize(self):
+        """
+        Toggle between maximized and normal window state
+        """
+        if self.isMaximized():
+            self.showNormal()
+            self.maximize_action.setText('&Maximize Window')
+            self.statusBar().showMessage("Window restored to normal size", 2000)
+        else:
+            self.showMaximized()
+            self.maximize_action.setText('&Restore Window')
+            self.statusBar().showMessage("Window maximized", 2000)
     
     def export_call_history(self):
         """
