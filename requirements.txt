@@ -1,0 +1,30 @@
+# GUI Framework
+PyQt5==5.15.10
+
+# Twilio SDK for making calls
+twilio==8.2.0
+
+# Database and API
+supabase==1.0.4
+
+# Data processing and Excel export
+pandas==2.0.3
+openpyxl==3.1.2
+
+# Configuration management
+python-dotenv==1.0.0
+
+# Logging
+loguru==0.7.0
+
+# Date and time handling
+python-dateutil==2.8.2
+
+# HTTP requests
+requests==2.31.0
+
+# Audio handling (for future voicemail features)
+pydub==0.25.1
+
+# System integration
+psutil==5.9.5
