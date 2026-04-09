@@ -162,9 +162,12 @@ To add new features:
 
 The application logs important events. Check the console output for debugging information.
 
-## License
+## Licence
 
-This project is provided as-is for educational and development purposes.
+MIT License
+
+Copyright (c) 2026 Fahad Ali
+
 
 ## Support
 
